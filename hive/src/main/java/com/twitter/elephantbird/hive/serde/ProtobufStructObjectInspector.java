@@ -154,10 +154,27 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
     ProtobufStructField psf = (ProtobufStructField) field;
     FieldDescriptor fieldDescriptor = psf.getFieldDescriptor();
     if (fieldDescriptor.getType() != Type.MESSAGE) {
-      builder.setField(descriptor.findFieldByName(field.getFieldName()), fieldValue);
+      if (!fieldDescriptor.isRepeated()) {
+        builder.setField(descriptor.findFieldByName(field.getFieldName()), fieldValue);
+      } else {
+        java.util.List values = (java.util.List) fieldValue;
+        int i = 0;
+        for (Object value : values) {
+          builder.setRepeatedField(descriptor.findFieldByName(field.getFieldName()), i++, value);
+        }
+      }
     } else {
-      Message.Builder subFieldBuilder = (Message.Builder) fieldValue;
-      builder.setField(descriptor.findFieldByName(field.getFieldName()), subFieldBuilder.build());
+      if (!fieldDescriptor.isRepeated()) {
+        Message.Builder subFieldBuilder = (Message.Builder) fieldValue;
+        builder.setField(descriptor.findFieldByName(field.getFieldName()), subFieldBuilder.build());
+      } else {
+        java.util.List values = (java.util.List) fieldValue;
+        int i = 0;
+        for (Object value : values) {
+          Message.Builder subFieldBuilder = (Message.Builder) value;
+          builder.setRepeatedField(descriptor.findFieldByName(field.getFieldName()), i++, subFieldBuilder.build());
+        }
+      }
     }
     return builder;
 
