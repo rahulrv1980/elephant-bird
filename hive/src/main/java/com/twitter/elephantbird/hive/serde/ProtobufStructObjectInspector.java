@@ -122,6 +122,15 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof ProtobufStructObjectInspector)) {
+      return false;
+    }
+    ProtobufStructObjectInspector that = (ProtobufStructObjectInspector)o;
+    return (descriptor.equals(that.descriptor) && builder.equals(that.builder));
+  }
+
+  @Override
   public Category getCategory() {
     return Category.STRUCT;
   }
@@ -158,9 +167,8 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
         builder.setField(descriptor.findFieldByName(field.getFieldName()), fieldValue);
       } else {
         java.util.List values = (java.util.List) fieldValue;
-        int i = 0;
         for (Object value : values) {
-          builder.setRepeatedField(descriptor.findFieldByName(field.getFieldName()), i++, value);
+          builder.addRepeatedField(descriptor.findFieldByName(field.getFieldName()), value);
         }
       }
     } else {
@@ -169,10 +177,9 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
         builder.setField(descriptor.findFieldByName(field.getFieldName()), subFieldBuilder.build());
       } else {
         java.util.List values = (java.util.List) fieldValue;
-        int i = 0;
         for (Object value : values) {
           Message.Builder subFieldBuilder = (Message.Builder) value;
-          builder.setRepeatedField(descriptor.findFieldByName(field.getFieldName()), i++, subFieldBuilder.build());
+          builder.addRepeatedField(descriptor.findFieldByName(field.getFieldName()), subFieldBuilder.build());
         }
       }
     }
@@ -190,7 +197,14 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
     if (data == null) {
       return null;
     }
-    Message.Builder m = ((Message.Builder) data);
+
+    Message.Builder m =  null;
+    if (data instanceof Message) {
+      m = ((Message) data).toBuilder();
+    } else {
+      m = ((Message.Builder) data);
+    }
+
     ProtobufStructField psf = (ProtobufStructField) structField;
     FieldDescriptor fieldDescriptor = psf.getFieldDescriptor();
 
@@ -227,7 +241,12 @@ public final class ProtobufStructObjectInspector extends SettableStructObjectIns
       return null;
     }
     List<Object> result = Lists.newArrayList();
-    Message.Builder m = (Message.Builder) data;
+    Message.Builder m =  null;
+    if (data instanceof Message) {
+      m = ((Message) data).toBuilder();
+    } else {
+      m = ((Message.Builder) data);
+    }
     for (FieldDescriptor fd : descriptor.getFields()) {
       result.add(m.getField(fd));
     }
